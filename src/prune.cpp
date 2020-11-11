@@ -4,16 +4,18 @@
 
 #include "pad.hpp"
 
-template<class T>
+template<typename T>
 T select_median(const std::vector<T> D)
 {
-    std::vector<T>::iterator first = D.begin();
-    std::vector<T>::iterator end   = D.end()  ;
-    std::vector<T>::iterator mid   = (first + end) / 2;
+    typename std::vector<T>::iterator first = D.begin();
+    typename std::vector<T>::iterator end   = D.end()  ;
+    typename std::vector<T>::iterator mid   = (first + end) / 2;
 
     return std::nth_element(first, mid, end);
 }
 
+
+#include <abycore/circuit/booleancircuits.h>
 
 template<class T>
   std::pair<std::vector<T>, std::vector<T>> 
@@ -31,9 +33,11 @@ template<class T>
         T mB = select_median(iD_B);
 
         // c <- mA < mB
+		
 
         // A cut half
 
         // B cut half
     }
 }
+
