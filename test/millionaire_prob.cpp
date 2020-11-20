@@ -16,6 +16,9 @@
  \brief		Implementation of the millionaire problem using ABY Framework.
  */
 
+#define TEST_LINE \
+    //std::cout << "No." << times << " test: " << line_no++ << std::endl;
+
 #include "millionaire_prob.h"
 #include <abycore/circuit/booleancircuits.h>
 #include <abycore/sharing/sharing.h>
@@ -40,37 +43,41 @@ int32_t test_millionaire_prob_circuit(
 
 	Circuit* circ = sharings[sharing]->GetCircuitBuildRoutine();
 
-	share *s_alice_money, *s_bob_money, *s_out;
-	uint32_t alice_money, bob_money, output;
-	srand(time(NULL));
-	alice_money = rand();
-	bob_money = rand();
-
-	if(role == SERVER) {
-		s_alice_money = circ->PutDummyINGate(bitlen);
-		s_bob_money = circ->PutINGate(bob_money, bitlen, SERVER);
-	} else { //role == CLIENT
-		s_alice_money = circ->PutINGate(alice_money, bitlen, CLIENT);
-		s_bob_money = circ->PutDummyINGate(bitlen);
-	}
-
-	s_out = BuildMillionaireProbCircuit(s_alice_money, s_bob_money,
-			(BooleanCircuit*) circ);
-
-	s_out = circ->PutOUTGate(s_out, ALL);
-
-	party->ExecCircuit();
-
-	output = s_out->get_clear_value<uint32_t>();
-
-	std::cout << "Testing Millionaire's Problem in " << get_sharing_name(sharing)
-				<< " sharing: " << std::endl;
-	std::cout << "\nAlice Money:\t" << alice_money;
-	std::cout << "\nBob Money:\t" << bob_money;
-	std::cout << "\nCircuit Result:\t" << (output ? ALICE : BOB);
-	std::cout << "\nVerify Result: \t" << ((alice_money > bob_money) ? ALICE : BOB)
-				<< "\n";
-
+	//for(int times = 0; times < 5; times ++)
+	//{
+		share *s_alice_money, *s_bob_money, *s_out;
+		uint32_t alice_money, bob_money, output;
+		srand(time(NULL));
+		alice_money = rand();
+		bob_money = rand();
+	
+		if(role == SERVER) {
+			s_alice_money = circ->PutDummyINGate(bitlen);
+			s_bob_money = circ->PutINGate(bob_money, bitlen, SERVER);
+		} else { //role == CLIENT
+			s_alice_money = circ->PutINGate(alice_money, bitlen, CLIENT);
+			s_bob_money = circ->PutDummyINGate(bitlen);
+		}
+	
+		//s_out = BuildMillionaireProbCircuit(s_alice_money, s_bob_money,
+		//		(BooleanCircuit*) circ);
+		s_out = ((BooleanCircuit*) circ)->PutGTGate(s_alice_money, s_bob_money);
+	
+		s_out = circ->PutOUTGate(s_out, ALL);
+	
+		party->ExecCircuit();
+	
+		output = s_out->get_clear_value<uint32_t>();
+	
+		std::cout << "Testing Millionaire's Problem in " << get_sharing_name(sharing)
+					<< " sharing: " << std::endl;
+		std::cout << "\nAlice Money:\t" << alice_money;
+		std::cout << "\nBob Money:\t" << bob_money;
+		std::cout << "\nCircuit Result:\t" << (output ? ALICE : BOB);
+		std::cout << "\nVerify Result: \t" << ((alice_money > bob_money) ? ALICE : BOB)
+					<< "\n";
+	//}
+	
 	delete party;
 	return 0;
 }
@@ -81,7 +88,8 @@ share* BuildMillionaireProbCircuit(share *s_alice, share *s_bob,
 	share* out;
 
 	/** Calling the greater than equal function in the Boolean circuit class.*/
-	out = bc->PutEQGate(s_alice, s_bob);
+	//out = bc->PutEQGate(s_alice, s_bob);
+	out = bc->PutGTGate(s_alice, s_bob);
 
 	return out;
 }
