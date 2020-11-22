@@ -9,6 +9,8 @@
 #include <ENCRYPTO_utils/crypto/crypto.h>
 #include <ENCRYPTO_utils/parse_options.h>
 //ABY Party class
+#include <abycore/sharing/sharing.h>
+#include <abycore/circuit/booleancircuits.h>
 #include <abycore/aby/abyparty.h>
 
 #include "dataset.hpp"
@@ -26,38 +28,50 @@ class Party
 private:
     DataSet<T> data_set;
 
-    e_role role;
-
     void Prune(size_t s, size_t k);
 
 	//void InitABYParty();
+	bool CompareMedianWithAnotherParty(T median);
+
+	/**
+	 * @param	role 
+	 * @param	address
+	 * @param	port
+	 * @param	seclvl security level
+	 * @param	bitlen
+	 * @param	nthreads number of threads
+	 * @param	mt_alg
+	 * @param	sharing sharing type
+	 */ 
+    e_role role;
+	const std::string address;
+	uint16_t port;
+	seclvl seclevel;
+	uint32_t bitlen;
+	uint32_t nthreads;
+	e_mt_gen_alg mt_alg;
+	e_sharing sharing;
 
 public:
-    Party();
+    Party(e_role role, const std::string &address, uint16_t port, seclvl seclevel, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing);
 
     ~Party();
-
-	// Run Program
-	void Run(int, char**);
 
 };
 
 template<class T>
-void Party<T>::Run(int argc, char **argv)
+Party<T>::Party(e_role _role, const std::string &_address, 
+		uint16_t _port, seclvl _seclevel, uint32_t _bitlen, 
+		uint32_t _nthreads, e_mt_gen_alg _mt_alg, e_sharing _sharing)
+	:role(_role), address(_address), port(_port), 
+		seclevel(_seclevel), bitlen(_bitlen), 
+		nthreads(_nthreads), mt_alg(_mt_alg), sharing(_sharing)
 {
-	e_role role;
-	uint32_t bitlen = 32, nvals = 31, secparam = 128, nthreads = 1;
-	uint16_t port = 7766;
-	std::string address = "127.0.0.1";
-	int32_t test_op = -1;
-	e_mt_gen_alg mt_alg = MT_OT;
+}
 
-	ReadTestOptions(&argc, &argv, &role, &bitlen, &nvals, &secparam, &address, &port, &test_op);
-
-	seclvl seclvl = get_sec_lvl(secparam);
-
-	//evaluate the millionaires circuit using Yao
-	//test_millionaire_prob_circuit(role, address, port, seclvl, 32, nthreads, mt_alg, S_YAO);
+template<class T>
+Party<T>::~Party()
+{
 }
 
 template<class T>
@@ -78,9 +92,12 @@ void Party<T>::Prune(size_t s, size_t k)
 		// use garbled circuit to compute c
 		bool c(false);
 		//? Create ABYcircuit for every comparison or just for one time
-		assert(0);
+		//assert(0);
 
-		if((this->role == SERVER && c == 1)&&(this->role == CLIENT && c == 0)) 
+		//! Create ABYParty every run.
+		c = this->CompareMedianWithAnotherParty(median);
+
+		if((this->role == SERVER && c == 1) || (this->role == CLIENT && c == 0)) 
 		{
 			// retain only the upper half
 			this->data_set.KeepUpperHalf();
@@ -92,4 +109,38 @@ void Party<T>::Prune(size_t s, size_t k)
 		}
 		
 	}
+}
+
+template<class T>
+bool Party<T>::CompareMedianWithAnotherParty(T median)
+{
+	ABYParty* abyparty = new ABYParty(this->role, 
+		this->address, this->port, this->seclevel, 
+		this->bitlen, this->nthreads, this->mt_alg);
+
+	std::vector<Sharing*>& sharings = abyparty->GetSharings();
+
+	Circuit* circ = sharings[sharing]->GetCircuitBuildRoutine();
+
+	//! a is server, b is client
+	share *s_a_median, *s_b_median, *s_out;
+
+	if(this->role == SERVER)
+	{
+		s_a_median = circ->PutINGate(median, bitlen, SERVER);
+		s_b_median = circ->PutDummyINGate(this->bitlen);
+	}
+	else // this->role == CLIENT
+	{
+		s_a_median = circ->PutDummyINGate(bitlen);
+		s_b_median = circ->PutINGate(median, bitlen, CLIENT);
+	}
+
+	s_out = ((BooleanCircuit*) circ)->PutGTGate(s_a_median, s_b_median);
+
+	s_out = circ->PutOUTGate(s_out, ALL);
+
+	abyparty->ExecCircuit();
+
+	return s_out->get_clear_value<bool>();
 }
