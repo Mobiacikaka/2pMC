@@ -142,5 +142,7 @@ bool Party<T>::CompareMedianWithAnotherParty(T median)
 
 	abyparty->ExecCircuit();
 
+	delete abyparty;
+
 	return s_out->get_clear_value<bool>();
 }
