@@ -8,6 +8,8 @@
 #include <random>
 #include <exception>
 
+#include "config.h"
+
 template<class T>
 class Party;
 
@@ -16,12 +18,11 @@ class DataSet
 {
     friend Party<T>;
 
-    friend void TestFunctionA();
-    friend void TestFunctionB();
-
 private:
     void GenerateRandomDataSet(size_t n);
+
     typename std::vector<T>::iterator GetMedianIterator();
+
     void SortDataSet();
 
     std::vector<T> data_set;
@@ -33,7 +34,7 @@ protected:
     void Pad(size_t k, T p);
 
     // get the median element of the data set
-    T GetMedian() const;
+    T GetMedian();
 
     // retain only the upper half
     void KeepUpperHalf();
@@ -57,13 +58,11 @@ public:
 template<class T>
 DataSet<T>::DataSet()
 {
-
 }
 
 template<class T>
 DataSet<T>::~DataSet()
 {
-
 }
 
 template<class T>
@@ -80,13 +79,9 @@ template<class T>
 void DataSet<T>::GenerateRandomDataSet(size_t n)
 {
     this->data_set.resize(n);
+    std::srand(time(NULL));
     for(size_t i = 0; i < n; i ++)
-    {
-        int tmp = std::rand();
-        this->data_set[i] = tmp;
-        std::srand(time(NULL));
-        std::srand(tmp);
-    }
+        this->data_set[i] = random_range(kA, kB);
 }
 
 template<class T>
@@ -100,21 +95,13 @@ void DataSet<T>::Pad(size_t k, T p)
 	assert(p == kP_INFINITY || p == kN_INFINITY);
 
     // 1. Sort D_p and retain only the k smallest values
-	if(this->sorted == false) 
-	{
-		this->SortDataSet();
-		this->sorted = true;
-	}
+	if(this->sorted == false) this->SortDataSet();
 
     // 2. Pad D_p with +\infinity until |D_p|=k
 	if(k < this->data_set.size())
-	{
 		this->data_set.erase(this->data_set.begin()+k, this->data_set.end());
-	}
 	else
-	{
 		this->data_set.insert(this->data_set.end(), k-this->data_set.size(), kP_INFINITY);
-	}
 
     // 3. Pad D_p with \hat{p} until |D_p|=2^{\log{2}{(k)}}
 	k = pow( 2, std::ceil( std::log2( k ) ) );
@@ -136,10 +123,8 @@ void DataSet<T>::Pad(size_t k, T p)
 template<class T>
 void DataSet<T>::Init()
 {
-    size_t n = std::rand() % 30;
-    std::srand(n);
-    // if(n < 50) n += 50;
-    std::cout << "Generate length of " << n << " list." << std::endl;
+    std::srand(time(NULL));
+    size_t n = random_range(kRANDOM_LIST_MIN_LENGTH, kRANDOM_LIST_MAX_LENGTH);
     this->GenerateRandomDataSet(n);
     this->SortDataSet();
 }
@@ -153,11 +138,12 @@ typename std::vector<T>::iterator DataSet<T>::GetMedianIterator()
 }
 
 template<class T>
-T DataSet<T>::GetMedian() const
+T DataSet<T>::GetMedian()
 {
     assert(sorted == true);
     typename std::vector<T>::iterator middleiterator = this->GetMedianIterator();
-    return *middleiterator;
+    const T median = *middleiterator;
+    return median;
 }
 
 template<class T>

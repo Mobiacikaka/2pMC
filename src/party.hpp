@@ -15,10 +15,8 @@
 #include <abycore/circuit/booleancircuits.h>
 #include <abycore/aby/abyparty.h>
 
+#include "config.h"
 #include "dataset.hpp"
-
-int32_t ReadTestOptions(int32_t*, char***, e_role*,	uint32_t*, 	
-	uint32_t*, uint32_t*, std::string*,	uint16_t*, int32_t*);
 
 /**
  * \warning suppose A is SERVER and B is CLIENT
@@ -146,13 +144,13 @@ bool Party<T>::CompareMedianWithAnotherParty(T median)
 
 	if(this->role == SERVER)
 	{
-		s_a_median = circ->PutINGate(median, bitlen, SERVER);
 		s_b_median = circ->PutDummyINGate(this->bitlen);
+		s_a_median = circ->PutINGate(median, bitlen, SERVER);
 	}
 	else // this->role == CLIENT
 	{
-		s_a_median = circ->PutDummyINGate(bitlen);
 		s_b_median = circ->PutINGate(median, bitlen, CLIENT);
+		s_a_median = circ->PutDummyINGate(bitlen);
 	}
 
 	s_out = static_cast<BooleanCircuit*>(circ)->PutGTGate(s_a_median, s_b_median);
@@ -169,7 +167,7 @@ bool Party<T>::CompareMedianWithAnotherParty(T median)
 template<class T>
 size_t Party<T>::Generates()
 {
-	return 10;
+	return kS;
 }
 
 template<class T>
