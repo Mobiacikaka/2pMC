@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
 
     seclvl seclevel = get_sec_lvl(secparam);
 
-	Party<int> party(role, address, port, seclevel, bitlen, nthreads, mt_alg, S_YAO);
+	Party party(role, address, port, seclevel, bitlen, nthreads, mt_alg, S_YAO);
     party.Run();
 
 	return 0;

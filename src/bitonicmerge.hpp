@@ -4,19 +4,19 @@
 #include <vector>
 #include <iostream>
 
-template<class T>
+
 class BitonicMerge
 {
 private:
-    void Merge(size_t l, size_t r, std::vector<T> &D);
+    void Merge(size_t l, size_t r, std::vector<int32_t> &D);
 
 public:
-    void operator()(size_t l, size_t r, std::vector<T> &D);
+    void operator()(size_t l, size_t r, std::vector<int32_t> &D);
     
 };
 
-template<class T>
-void BitonicMerge<T>::Merge(size_t l, size_t r, std::vector<T> &D)
+
+void BitonicMerge<int32_t>::Merge(size_t l, size_t r, std::vector<int32_t> &D)
 {
     if(r <= l) return ;
 
@@ -33,8 +33,8 @@ void BitonicMerge<T>::Merge(size_t l, size_t r, std::vector<T> &D)
     this->Merge(m, r, D);
 }
 
-template<class T>
-void BitonicMerge<T>::operator()(size_t l, size_t r, std::vector<T> &D)
+
+void BitonicMerge<int32_t>::operator()(size_t l, size_t r, std::vector<int32_t> &D)
 {
     this->Merge(l, r, D);
 }

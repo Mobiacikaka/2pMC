@@ -1,40 +1,29 @@
 #pragma once
 
-#include <iostream>
-#include <algorithm>
-#include <cmath>
 #include <vector>
-#include <cassert>
-#include <random>
-#include <exception>
 
 #include "config.h"
 
-template<class T>
-class Party;
-
-template<class T>
 class DataSet
 {
-    friend Party<T>;
+    friend class Party;
+    friend void TFA();
 
 private:
     void GenerateRandomDataSet(size_t n);
 
-    typename std::vector<T>::iterator GetMedianIterator();
-
     void SortDataSet();
 
-    std::vector<T> data_set;
+    std::vector<data_t> data_set;
 
     bool sorted;
 
 protected:
     // This pad version is not optimized
-    void Pad(size_t k, T p);
+    void Pad(size_t k, data_t p);
 
     // get the median element of the data set
-    T GetMedian();
+    data_t GetMedian() const;
 
     // retain only the upper half
     void KeepUpperHalf();
@@ -42,10 +31,11 @@ protected:
     // retain only the lower half
     void KeepLowerHalf();
 
+    // Get the size of data set
+    size_t GetSizeofDataSet() const;
+
     //! Following function only for test
     void PrintAllElement();
-
-    size_t GetSizeofDataSet() const;
 
 public:
     DataSet();
@@ -54,121 +44,3 @@ public:
     // Use Random Function to generate random int list
     void Init();
 };
-
-template<class T>
-DataSet<T>::DataSet()
-{
-}
-
-template<class T>
-DataSet<T>::~DataSet()
-{
-}
-
-template<class T>
-void DataSet<T>::PrintAllElement()
-{
-    for(auto it = this->data_set.begin(); it < this->data_set.end(); it ++)
-    {
-        std::cout << *it << " ";
-    }
-    std::cout << std::endl;
-}
-
-template<class T>
-void DataSet<T>::GenerateRandomDataSet(size_t n)
-{
-    this->data_set.resize(n);
-    std::srand(time(NULL));
-    for(size_t i = 0; i < n; i ++)
-        this->data_set[i] = random_range(kA, kB);
-}
-
-template<class T>
-void DataSet<T>::Pad(size_t k, T p)
-{
-    std::cout << "Entering Pad" << std::endl;
-
-    const T kP_INFINITY = std::numeric_limits<T>::max(); // positive infinity
-    const T kN_INFINITY = std::numeric_limits<T>::min(); // negative infinity
-
-	assert(p == kP_INFINITY || p == kN_INFINITY);
-
-    // 1. Sort D_p and retain only the k smallest values
-	if(this->sorted == false) this->SortDataSet();
-
-    // 2. Pad D_p with +\infinity until |D_p|=k
-	if(k < this->data_set.size())
-		this->data_set.erase(this->data_set.begin()+k, this->data_set.end());
-	else
-		this->data_set.insert(this->data_set.end(), k-this->data_set.size(), kP_INFINITY);
-
-    // 3. Pad D_p with \hat{p} until |D_p|=2^{\log{2}{(k)}}
-	k = pow( 2, std::ceil( std::log2( k ) ) );
-    size_t padsize = k - this->data_set.size();
-	if (p == kP_INFINITY)
-	{
-		for(size_t i = 0; i < padsize; i ++)
-			this->data_set.insert(this->data_set.end(),   p);
-	}
-	else
-	{
-		for(size_t i = 0; i < padsize; i ++)
-			this->data_set.insert(this->data_set.begin(), p);
-	}
-
-    // 4. return D_p
-}
-
-template<class T>
-void DataSet<T>::Init()
-{
-    std::srand(time(NULL));
-    size_t n = random_range(kRANDOM_LIST_MIN_LENGTH, kRANDOM_LIST_MAX_LENGTH);
-    this->GenerateRandomDataSet(n);
-    this->SortDataSet();
-}
-
-template<class T>
-typename std::vector<T>::iterator DataSet<T>::GetMedianIterator()
-{
-    size_t size = this->data_set.size();
-    size_t middlepostion = size / 2;
-    return this->data_set.begin() + middlepostion;
-}
-
-template<class T>
-T DataSet<T>::GetMedian()
-{
-    assert(sorted == true);
-    typename std::vector<T>::iterator middleiterator = this->GetMedianIterator();
-    const T median = *middleiterator;
-    return median;
-}
-
-template<class T>
-size_t DataSet<T>::GetSizeofDataSet() const
-{
-    return this->data_set.size();
-}
-
-template<class T>
-void DataSet<T>::KeepUpperHalf()
-{
-    typename std::vector<T>::iterator middleiterator = this->GetMedianIterator();
-    this->data_set.erase(middleiterator, this->data_set.end());
-}
-
-template<class T>
-void DataSet<T>::KeepLowerHalf()
-{
-    typename std::vector<T>::iterator middleiterator = this->GetMedianIterator();
-    this->data_set.erase(this->data_set.begin(), middleiterator);
-}
-
-template<class T>
-void DataSet<T>::SortDataSet()
-{
-    std::sort(this->data_set.begin(), this->data_set.end());
-    this->sorted = true;
-}
