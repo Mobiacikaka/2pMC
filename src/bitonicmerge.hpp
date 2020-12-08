@@ -17,7 +17,7 @@ public:
 };
 
 
-void BitonicMerge<int32_t>::Merge(size_t l, size_t r, std::vector<int32_t> &D)
+void BitonicMerge::Merge(size_t l, size_t r, std::vector<int32_t> &D)
 {
     if(r <= l) return ;
 
@@ -35,7 +35,7 @@ void BitonicMerge<int32_t>::Merge(size_t l, size_t r, std::vector<int32_t> &D)
 }
 
 
-void BitonicMerge<int32_t>::operator()(size_t l, size_t r, std::vector<int32_t> &D)
+void BitonicMerge::operator()(size_t l, size_t r, std::vector<int32_t> &D)
 {
     this->Merge(l, r, D);
 }
