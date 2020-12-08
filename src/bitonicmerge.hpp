@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __BITONICMERGE_HPP__
+#define __BITONICMERGE_HPP__
 
 #include <cstddef>
 #include <vector>
@@ -39,3 +40,4 @@ void BitonicMerge<int32_t>::operator()(size_t l, size_t r, std::vector<int32_t> 
     this->Merge(l, r, D);
 }
 
+#endif
