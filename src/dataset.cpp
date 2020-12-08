@@ -108,3 +108,13 @@ void DataSet::SortDataSet()
     std::sort(this->data_set.begin(), this->data_set.end());
     this->sorted = true;
 }
+
+bool DataSet::IsSorted() const
+{
+    return sorted;
+}
+
+share* DataSet::PutSIMDINGate(ArithmeticCircuit* circ, uint32_t nvals, size_t index, uint32_t bitlen, e_role role)
+{
+    circ->PutSIMDINGate(nvals, this->data_set[index], bitlen, role);
+}

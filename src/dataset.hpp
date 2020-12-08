@@ -1,13 +1,14 @@
-#pragma once
+#ifndef __DATASET_HPP__
+#define __DATASET_HPP__
 
 #include <vector>
+#include <abycore/circuit/arithmeticcircuits.h>
 
 #include "config.h"
 
 class DataSet
 {
     friend class Party;
-    friend void TFA();
 
 private:
     void GenerateRandomDataSet(size_t n);
@@ -34,6 +35,12 @@ protected:
     // Get the size of data set
     size_t GetSizeofDataSet() const;
 
+    // 
+    bool IsSorted() const;
+
+    // Pack the PutSIMDINGate in the DataSet class
+    share* PutSIMDINGate(ArithmeticCircuit* circ, uint32_t nvals, size_t index, uint32_t bitlen, e_role role);
+
     //! Following function only for test
     void PrintAllElement();
 
@@ -44,3 +51,5 @@ public:
     // Use Random Function to generate random int list
     void Init();
 };
+
+#endif
