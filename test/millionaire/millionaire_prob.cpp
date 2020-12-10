@@ -58,8 +58,8 @@ int32_t test_millionaire_prob_circuit(
 		s_bob_money = arithcirc->PutINGate(money, bitlen, CLIENT);
 	}
 
-	// s_out = arithcirc->PutADDGate(s_alice_money, s_bob_money);
-	s_out = boolcirc->PutGTGate(s_alice_money, s_bob_money);
+	s_out = arithcirc->PutADDGate(s_alice_money, s_bob_money);
+	// s_out = boolcirc->PutGTGate(s_alice_money, s_bob_money);
 
 	s_out = arithcirc->PutOUTGate(s_out, ALL);
 

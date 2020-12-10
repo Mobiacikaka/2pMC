@@ -21,7 +21,6 @@
 #include "WaksmanPermutation.h"
 #include <abycore/circuit/booleancircuits.h>
 #include <abycore/circuit/circuit.h>
-#include <abycore/circuit/arithmeticcircuits.h>
 #include <abycore/aby/abyparty.h>
 #include <cassert>
 

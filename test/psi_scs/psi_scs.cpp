@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
 	string address = "127.0.0.1";
 	int32_t test_op = -1;
 	e_mt_gen_alg mt_alg = MT_OT;
-	bool verify_output = true;
+	bool verify_output = false;
 
 	read_test_options(&argc, &argv, &role, &bitlen, &neles, &secparam, &address,
 			&port, &test_op, &prot_version, &verify_output);

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.0)
 
 if(NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 endif()
 if(NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
@@ -46,9 +46,9 @@ endif()
 # 	message("CRYPTO was not found")
 # endif()
 
-add_executable(test millionaire_prob_test.cpp millionaire_prob.cpp)
+add_executable(millionnair millionaire_prob_test.cpp millionaire_prob.cpp)
 target_link_libraries(
-	test 
+	millionnair
 	aby 
 	otextension
 	encrypto_utils 

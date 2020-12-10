@@ -24,6 +24,35 @@
 using namespace std;
 #define BUILD_WAKSMAN
 
+static inline void GenerateRandomSet(uint32_t* srv_set, uint32_t* cli_set, uint32_t neles,
+	uint32_t* ver_intersect, uint64_t mask, uint32_t& ver_inter_ctr)
+{
+	//sample random client and server inputs
+	uint32_t rndval;
+	for (uint32_t i = 0; i < neles; i++) {
+		do {
+			rndval = rand() & mask;
+		} while (std::find(srv_set, srv_set+neles, rndval) != srv_set+neles
+				|| std::find(cli_set, cli_set+neles, rndval) != cli_set+neles);
+
+		srv_set[i] = rndval;
+		cli_set[i] = rndval;
+		//ver_intersect[ver_inter_ctr] = rndval;
+		//ver_inter_ctr++;
+		if(rand() % 2 == 0) {
+			cli_set[i] = rndval;
+			ver_intersect[ver_inter_ctr] = rndval;
+			ver_inter_ctr++;
+		} else {
+			do {
+				rndval = rand() & mask;
+			} while (std::find(srv_set, srv_set+neles, rndval) != srv_set+neles
+					|| std::find(cli_set, cli_set+neles, rndval) != cli_set+neles);
+			cli_set[i] = rndval;
+		}
+	}
+
+}
 
 int32_t test_psi_scs_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl,
 		uint32_t neles, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg,
@@ -36,7 +65,6 @@ int32_t test_psi_scs_circuit(e_role role, const std::string& address, uint16_t p
 	assert(bitlen <= 32);
 	//uint64_t mask = ((uint64_t) 1 << bitlen)-1;
 	uint64_t mask = 0b11111;
-	std::cout << "shit" << std::endl;
 
 	e_sharing sort, permute;
 	if (prot_version == 1) {
@@ -74,41 +102,30 @@ int32_t test_psi_scs_circuit(e_role role, const std::string& address, uint16_t p
 	shr_client_set = (share**) malloc(sizeof(share*) * neles);
 	shr_out = (share**) malloc(sizeof(share*) * neles);
 
-	//sample random client and server inputs
-	uint32_t rndval;
-	for (uint32_t i = 0; i < neles; i++) {
-		do {
-			rndval = rand() & mask;
-		} while (std::find(srv_set, srv_set+neles, rndval) != srv_set+neles
-				|| std::find(cli_set, cli_set+neles, rndval) != cli_set+neles);
-
-		srv_set[i] = rndval;
-		cli_set[i] = rndval;
-		//ver_intersect[ver_inter_ctr] = rndval;
-		//ver_inter_ctr++;
-		if(rand() % 2 == 0) {
-			cli_set[i] = rndval;
-			ver_intersect[ver_inter_ctr] = rndval;
-			ver_inter_ctr++;
-		} else {
-			do {
-				rndval = rand() & mask;
-			} while (std::find(srv_set, srv_set+neles, rndval) != srv_set+neles
-					|| std::find(cli_set, cli_set+neles, rndval) != cli_set+neles);
-			cli_set[i] = rndval;
-		}
-	}
+	GenerateRandomSet(srv_set, cli_set, neles, ver_intersect, mask, ver_inter_ctr);
 
 	std::sort(srv_set, srv_set + neles);
 	std::sort(cli_set, cli_set + neles);
 
 	for(size_t i = 0; i < neles; i ++) 
-		std::cout << srv_set[i] << "\t" << cli_set[i] << std::endl;
+		std::cout << ((role == SERVER) ? srv_set[i] : cli_set[i]) << " ";
+	std::cout << std::endl;
 
 	//Set input gates to the circuit
 	for (uint32_t i = 0; i < neles; i++) {
-		shr_server_set[i] = sortcirc->PutSIMDINGate(bitlen, srv_set[i], 1, SERVER);
-		shr_client_set[i] = sortcirc->PutSIMDINGate(bitlen, cli_set[neles-i-1], 1, CLIENT);
+		// Version 1
+		if(role == SERVER) {
+			shr_server_set[i] = sortcirc->PutSIMDINGate(bitlen, srv_set[i], 1, SERVER);
+			shr_client_set[i] = sortcirc->PutDummySIMDINGate(bitlen, 1);
+		}
+		else {
+			shr_server_set[i] = sortcirc->PutDummySIMDINGate(bitlen, 1);
+			shr_client_set[i] = sortcirc->PutSIMDINGate(bitlen, cli_set[neles-1-i], 1, CLIENT);
+		}
+
+		// Version 2
+		// shr_server_set[i] = sortcirc->PutSIMDINGate(bitlen, srv_set[i], 1, SERVER);
+		// shr_client_set[i] = sortcirc->PutSIMDINGate(bitlen, cli_set[neles-1-i], 1, CLIENT);
 	}
 
 	//Get inputs for the selection bits of the swap gate in the waksman network
@@ -143,20 +160,20 @@ int32_t test_psi_scs_circuit(e_role role, const std::string& address, uint16_t p
 		//}
 		//cout << "Number of intersections: " << ver_inter_ctr << ", " << circ_inter_ctr << endl;
 
-		std::sort(ver_intersect, ver_intersect+ver_inter_ctr);
+		// std::sort(ver_intersect, ver_intersect+ver_inter_ctr);
 		std::sort(circ_intersect, circ_intersect+circ_inter_ctr);
-		//for(uint32_t i = 0; i < ver_inter_ctr; i++) {
-		//	cout << "Verification " << i << ": " << (hex) << ver_intersect[i] << (dec) << endl;
-		//}
-		//for(uint32_t i = 0; i < circ_inter_ctr; i++) {
-		//	cout << "Circuit " << i << ": " << (hex) << circ_intersect[i] << (dec) << endl;
-		//}
-		if(verify) {
-			assert(circ_inter_ctr == ver_inter_ctr);
-			for(uint32_t i = 0; i < ver_inter_ctr; i++) {
-				assert(ver_intersect[i] == circ_intersect[i]);
-			}
+		// for(uint32_t i = 0; i < ver_inter_ctr; i++) {
+		// 	cout << "Verification " << i << ": " << (dec) << ver_intersect[i] << (dec) << endl;
+		// }
+		for(uint32_t i = 0; i < circ_inter_ctr; i++) {
+			cout << "Circuit " << i << ": " << (dec) << circ_intersect[i] << (dec) << endl;
 		}
+		// if(verify) {
+		// 	assert(circ_inter_ctr == ver_inter_ctr);
+		// 	for(uint32_t i = 0; i < ver_inter_ctr; i++) {
+		// 		assert(ver_intersect[i] == circ_intersect[i]);
+		// 	}
+		// }
 		//cout << "Intersection of size " << circ_inter_ctr << " correctly computed" << endl;
 	}
 
@@ -202,6 +219,10 @@ vector<uint32_t> BuildSCSPSICircuit(share** shr_srv_set, share** shr_cli_set, ve
 	vector<uint32_t> out(seqsize / 2);
 
 	a = PutVectorBitonicSortGate(shr_srv_set, shr_cli_set, neles, bitlen, sortcirc);
+	cout << "PutVectorBitonicSortGate result" << endl;
+	for (size_t i = 0; i < 2 * neles; i ++)
+		cout << a[i] << " ";
+	cout << endl;
 
 	if(type == 3) {
 		a = permcirc->PutYSwitchRolesGate(a);
