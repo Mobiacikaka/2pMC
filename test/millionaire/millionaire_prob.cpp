@@ -21,6 +21,7 @@
 
 #include "millionaire_prob.h"
 #include <abycore/circuit/booleancircuits.h>
+#include <abycore/circuit/arithmeticcircuits.h>
 #include <abycore/sharing/sharing.h>
 #include <abycore/aby/abyparty.h>
 
@@ -32,7 +33,8 @@ int32_t test_millionaire_prob_circuit(
 	uint32_t bitlen, 
 	uint32_t nthreads, 
 	e_mt_gen_alg mt_alg, 
-	e_sharing sharing
+	e_sharing sharing,
+	uint32_t money
 ) 
 {
 
@@ -41,24 +43,25 @@ int32_t test_millionaire_prob_circuit(
 
 	std::vector<Sharing*>& sharings = party->GetSharings();
 
-	Circuit* circ = sharings[sharing]->GetCircuitBuildRoutine();
+	// Circuit* arithcirc = sharings[sharing]->GetCircuitBuildRoutine();
+	ArithmeticCircuit* arithcirc = static_cast<ArithmeticCircuit*>(sharings[S_ARITH]->GetCircuitBuildRoutine());
+	BooleanCircuit* boolcirc = static_cast<BooleanCircuit*>(sharings[S_BOOL]->GetCircuitBuildRoutine());
 
 	share *s_alice_money, *s_bob_money, *s_out;
-	uint32_t alice_money, bob_money, output;
-	alice_money = 1000;
-	bob_money = 200;
+	uint32_t output;
 
 	if(role == SERVER) {
-		s_alice_money = circ->PutDummyINGate(bitlen);
-		s_bob_money = circ->PutINGate(role ? alice_money : bob_money, bitlen, role);
+		s_alice_money = arithcirc->PutDummyINGate(bitlen);
+		s_bob_money = arithcirc->PutINGate(money, bitlen, SERVER);
 	} else { //role == CLIENT
-		s_alice_money = circ->PutDummyINGate(bitlen);
-		s_bob_money = circ->PutINGate(role ? bob_money : alice_money, bitlen, role);
+		s_alice_money = arithcirc->PutDummyINGate(bitlen);
+		s_bob_money = arithcirc->PutINGate(money, bitlen, CLIENT);
 	}
 
-	s_out = ((BooleanCircuit*) circ)->PutGTGate(s_alice_money, s_bob_money);
+	// s_out = arithcirc->PutADDGate(s_alice_money, s_bob_money);
+	s_out = boolcirc->PutGTGate(s_alice_money, s_bob_money);
 
-	s_out = circ->PutOUTGate(s_out, ALL);
+	s_out = arithcirc->PutOUTGate(s_out, ALL);
 
 	party->ExecCircuit();
 
@@ -66,25 +69,9 @@ int32_t test_millionaire_prob_circuit(
 
 	std::cout << "Testing Millionaire's Problem in " << get_sharing_name(sharing)
 				<< " sharing: " << std::endl;
-	std::cout << "\nAlice Money:\t" << alice_money;
-	std::cout << "\nBob Money:\t" << bob_money;
-	std::cout << "\nCircuit Result:\t" << output;
-	std::cout << "\nVerify Result: \t" << ((alice_money > bob_money) ? ALICE : BOB)
-					<< "\n";
+	std::cout << "\nMy Money:\t" << money;
+	std::cout << "\nCircuit Result:\t" << output << std::endl;
 	
 	delete party;
 	return 0;
 }
-
-share* BuildMillionaireProbCircuit(share *s_alice, share *s_bob,
-		BooleanCircuit *bc) {
-
-	share* out;
-
-	/** Calling the greater than equal function in the Boolean circuit class.*/
-	//out = bc->PutEQGate(s_alice, s_bob);
-	out = bc->PutGTGate(s_alice, s_bob);
-
-	return out;
-}
-

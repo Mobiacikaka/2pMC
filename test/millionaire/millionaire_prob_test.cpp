@@ -33,7 +33,8 @@ int32_t read_test_options(
 	uint32_t* 		secparam, 
 	std::string* 	address,
 	uint16_t* 		port, 
-	int32_t* 		test_op
+	int32_t* 		test_op,
+	uint32_t*		money
 ) 
 {
 	uint32_t int_role = 0, int_port = 0;
@@ -41,6 +42,7 @@ int32_t read_test_options(
 	parsing_ctx options[] =
 	{ 
 		{ (void*) &int_role, 	T_NUM, "r", "Role: 0/1", 												true , false }, 
+		{ (void*) money,		T_NUM, "m", "Money of the party",										true , false },
 		{ (void*) nvals, 		T_NUM, "n", "Number of parallel operation elements", 					false, false }, 
 		{ (void*) bitlen, 		T_NUM, "b", "Bit-length, default 32", 									false, false }, 
 		{ (void*) secparam, 	T_NUM, "s", "Symmetric Security Bits, default: 128", 					false, false }, 
@@ -74,14 +76,16 @@ int main(int argc, char** argv) {
 	std::string address = "127.0.0.1";
 	int32_t test_op = -1;
 	e_mt_gen_alg mt_alg = MT_OT;
+	uint32_t money;
 
-	read_test_options(&argc, &argv, &role, &bitlen, &nvals, &secparam, &address, &port, &test_op);
+	read_test_options(&argc, &argv, &role, &bitlen, &nvals, &secparam, &address, &port, &test_op, &money);
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
 	//evaluate the millionaires circuit using Yao
+	std::cout << "My Money: " << money << std::endl;
 	test_millionaire_prob_circuit(role, address, port, seclvl, 32,
-			nthreads, mt_alg, S_YAO);
+			nthreads, mt_alg, S_ARITH, money);
 
 	return 0;
 }
