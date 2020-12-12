@@ -35,7 +35,7 @@ public:
 	Party();
 	virtual ~Party() = 0;
 
-	virtual void Run();
+	void Run();
 
 };
 

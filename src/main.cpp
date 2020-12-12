@@ -1,7 +1,10 @@
 #include <ENCRYPTO_utils/crypto/crypto.h>
 #include <ENCRYPTO_utils/parse_options.h>
 #include <abycore/aby/abyparty.h>
+
 #include "party.hpp"
+#include "server.hpp"
+#include "client.hpp"
 
 int32_t ReadTestOptions(
 	int32_t* 		argcp, 
@@ -58,8 +61,9 @@ int main(int argc, char** argv) {
 
     seclvl seclevel = get_sec_lvl(secparam);
 
-	Party party(role, address, port, seclevel, bitlen, nthreads, mt_alg, S_YAO);
-    party.Run();
+	Party *party;
+	if (role == SERVER) party = new Server();
+	else party = new Client();
 
 	return 0;
 }
