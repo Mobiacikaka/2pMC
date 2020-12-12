@@ -194,6 +194,7 @@ int32_t test_psi_scs_circuit(e_role role, const std::string& address, uint16_t p
 	free(cli_set);
 	free(shr_server_set);
 	free(shr_client_set);
+	for(size_t i = 0; i < out.size(); i ++) delete shr_out[i];
 	free(shr_out);
 	free(ver_intersect);
 	free(circ_intersect);
@@ -215,17 +216,13 @@ vector<uint32_t> BuildSCSPSICircuit(share** shr_srv_set, share** shr_cli_set, ve
 	vector<vector<uint32_t> > tempbits(seqsize);
 	vector<uint32_t> duptempvec;
 	vector<uint32_t> duptempin((seqsize - 1) / 2);
-	vector<uint32_t> a;
+	vector<uint32_t> bsout;
 	vector<uint32_t> out(seqsize / 2);
 
-	a = PutVectorBitonicSortGate(shr_srv_set, shr_cli_set, neles, bitlen, sortcirc);
-	cout << "PutVectorBitonicSortGate result" << endl;
-	for (size_t i = 0; i < 2 * neles; i ++)
-		cout << a[i] << " ";
-	cout << endl;
+	bsout = PutVectorBitonicSortGate(shr_srv_set, shr_cli_set, neles, bitlen, sortcirc);
 
 	if(type == 3) {
-		a = permcirc->PutYSwitchRolesGate(a);
+		bsout = permcirc->PutYSwitchRolesGate(bsout);
 		sortcirc = permcirc;
 	}
 	/*for(uint32_t i = 0; i < a.size(); i++) {
@@ -238,7 +235,7 @@ vector<uint32_t> BuildSCSPSICircuit(share** shr_srv_set, share** shr_cli_set, ve
 		dupvec[i].resize(bitlen);
 		for (uint32_t k = 0; k < bitlen; k++) {
 			for (uint32_t j = 0; j < (seqsize - 1) / 2; j++) {
-				duptempin[j] = a[2 * j + i];
+				duptempin[j] = bsout[2 * j + i];
 				duptemppos[j] = k;
 			}
 			dupvec[i][k] = sortcirc->PutCombineAtPosGate(duptempin, k);
@@ -260,8 +257,8 @@ vector<uint32_t> BuildSCSPSICircuit(share** shr_srv_set, share** shr_cli_set, ve
 	//Put remaining DupSelect2 Gate if necessary
 	if (seqsize % 2 == 0) {
 		tempbits.resize(2);
-		tempbits[0] = sortcirc->PutSplitterGate(a[seqsize - 2]);
-		tempbits[1] = sortcirc->PutSplitterGate(a[seqsize - 1]);
+		tempbits[0] = sortcirc->PutSplitterGate(bsout[seqsize - 2]);
+		tempbits[1] = sortcirc->PutSplitterGate(bsout[seqsize - 1]);
 		temp[seqsize / 2 - 1] = PutDupSelect2Gate(tempbits[0], tempbits[1], sortcirc);
 	}
 

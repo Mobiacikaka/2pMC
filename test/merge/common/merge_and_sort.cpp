@@ -23,8 +23,7 @@ std::vector<uint32_t> PutVectorCondSwapGate(uint32_t a, uint32_t b, uint32_t s, 
 }
 
 //vector<uint32_t> PutVectorBitonicSortGate(vector<uint32_t>& a, vector<uint32_t>& b, uint32_t bitlen, BooleanCircuit* circ) {
-std::vector<uint32_t> PutVectorBitonicSortGate(share** srv_set, share** cli_set, uint32_t neles,
-		uint32_t bitlen, BooleanCircuit* circ) {
+std::vector<uint32_t> PutVectorBitonicSortGate(share** srv_set, share** cli_set, uint32_t neles, uint32_t bitlen, BooleanCircuit* circ) {
 
 	uint32_t seqsize = 2*neles;
 	uint32_t selbitsvec;
