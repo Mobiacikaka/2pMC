@@ -17,7 +17,7 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 # Write built executables and libraries to bin/ and lib/, respectively.
 if(NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 endif()
 if(NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
@@ -43,3 +43,5 @@ endif()
 find_package(GMP REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Boost 1.66.0 REQUIRED COMPONENTS thread system)
+
+add_subdirectory(src)
