@@ -114,7 +114,7 @@ bool DataSet::IsSorted() const
     return sorted;
 }
 
-share* DataSet::PutSIMDINGate(ArithmeticCircuit* circ, uint32_t nvals, size_t index, uint32_t bitlen, e_role role)
+data_t DataSet::operator[](size_t index)
 {
-    circ->PutSIMDINGate(nvals, this->data_set[index], bitlen, role);
+    return data_set[index];
 }
