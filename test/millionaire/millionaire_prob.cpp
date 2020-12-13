@@ -33,8 +33,7 @@ int32_t test_millionaire_prob_circuit(
 	uint32_t bitlen, 
 	uint32_t nthreads, 
 	e_mt_gen_alg mt_alg, 
-	e_sharing sharing,
-	uint32_t money
+	e_sharing sharing
 ) 
 {
 
@@ -44,33 +43,40 @@ int32_t test_millionaire_prob_circuit(
 	std::vector<Sharing*>& sharings = party->GetSharings();
 
 	// Circuit* arithcirc = sharings[sharing]->GetCircuitBuildRoutine();
-	ArithmeticCircuit* arithcirc = static_cast<ArithmeticCircuit*>(sharings[S_ARITH]->GetCircuitBuildRoutine());
-	BooleanCircuit* boolcirc = static_cast<BooleanCircuit*>(sharings[S_BOOL]->GetCircuitBuildRoutine());
+	BooleanCircuit* bcirc = static_cast<BooleanCircuit*>(sharings[S_BOOL]->GetCircuitBuildRoutine());
 
-	share *s_alice_money, *s_bob_money, *s_out;
-	uint32_t output;
-
+	share* shr_a, *shr_b, *shr_c;
+	uint32_t a = 1000, b = 100, c=999;
 	if(role == SERVER) {
-		s_alice_money = arithcirc->PutDummyINGate(bitlen);
-		s_bob_money = arithcirc->PutINGate(money, bitlen, SERVER);
-	} else { //role == CLIENT
-		s_alice_money = arithcirc->PutDummyINGate(bitlen);
-		s_bob_money = arithcirc->PutINGate(money, bitlen, CLIENT);
+		shr_a = bcirc->PutSIMDINGate(bitlen, a, 1, SERVER);
+		shr_b = bcirc->PutSIMDINGate(bitlen, b, 1, SERVER);
+		shr_c = bcirc->PutDummySIMDINGate(bitlen, 1);
+	}
+	else {
+		shr_a = bcirc->PutDummySIMDINGate(bitlen, 1);
+		shr_b = bcirc->PutDummySIMDINGate(bitlen, 1);
+		shr_c = bcirc->PutSIMDINGate(bitlen, c, 1, CLIENT);
 	}
 
-	s_out = arithcirc->PutADDGate(s_alice_money, s_bob_money);
-	// s_out = boolcirc->PutGTGate(s_alice_money, s_bob_money);
-
-	s_out = arithcirc->PutOUTGate(s_out, ALL);
+	share* shr_out;
+	shr_out = bcirc->PutADDGate(shr_a, shr_b);
+	shr_out = bcirc->PutSUBGate(shr_c, shr_out);
+	shr_out = bcirc->PutOUTGate(shr_out, CLIENT);
 
 	party->ExecCircuit();
+	std::cout << "success" << std::endl;
 
-	output = s_out->get_clear_value<uint32_t>();
+	std::cout << shr_a->get_wires().size() << std::endl;
 
-	std::cout << "Testing Millionaire's Problem in " << get_sharing_name(sharing)
-				<< " sharing: " << std::endl;
-	std::cout << "\nMy Money:\t" << money;
-	std::cout << "\nCircuit Result:\t" << output << std::endl;
+	if(role == CLIENT) {
+		uint32_t output = shr_out->get_clear_value<uint32_t>();
+		std::cout << output << std::endl;
+	}
+
+	// std::cout << "Testing Millionaire's Problem in " << get_sharing_name(sharing)
+	// 			<< " sharing: " << std::endl;
+	// std::cout << "\nMy Money:\t" << money;
+	// std::cout << "\nCircuit Result:\t" << output << std::endl;
 	
 	delete party;
 	return 0;
