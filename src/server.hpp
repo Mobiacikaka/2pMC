@@ -14,6 +14,7 @@ protected:
     // main functions
     void Prune();
     void MergeAndShare();
+    void SelectionProbability();
 
 public:
     Server();

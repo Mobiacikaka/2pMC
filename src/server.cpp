@@ -65,12 +65,14 @@ uint32_t Server::comp_median() {
 }
 
 void Server::Prune() {
-    const data_t padding = std::numeric_limits<data_t>::max();
+    const data_t padding = kA;
     const size_t s = this->generate_s();
     const size_t k = this->generate_k();
 	bool comp(false);
 
     assert(padding == kA || padding == kB);
+
+    this->m_k = k;
 
     data_set.Pad(k, padding);
 
@@ -126,4 +128,39 @@ void Server::MergeAndShare() {
     free(shr_rnd_srv_set);
     for(size_t i = 0; i < shrsize; i ++) delete shr_out[i];
     free(shr_out);
+}
+
+void Server::SelectionProbability()
+{
+    shr_dataset.insert(shr_dataset.begin(), 0);
+    shr_dataset.insert(shr_dataset.end(), 0);
+
+    size_t length(shr_dataset.size());
+    shr_gap.resize(length);
+    shr_mass.resize(length);
+
+    // compute gaps(share) first
+    size_t mpos(length/2); // median position
+    for(size_t i = 0; i < mpos-1; i ++) 
+        shr_gap[i] = static_cast<int>(shr_dataset[i+1] - shr_dataset[i]);
+    shr_gap[mpos-1] = 0; // shr_gap[mpos] in client is 1
+    for(size_t i = mpos; i < length; i ++)
+        shr_gap[i] = static_cast<int>(shr_dataset[i] - shr_dataset[i-1]);
+
+    // compute other utility
+    int utility;
+    double weight, shift;
+    for(size_t i = 0; i < length; i ++) {
+        utility = i < mpos ? i - mpos + 1 : mpos - i;
+        weight = exp(kEPSILON * utility);
+        shift = i > 0 ? shr_mass[i-1] : 0;
+        shr_mass[i] = shift + weight * shr_gap[i];
+    }
+
+    nonces1.resize(this->m_k);
+    for(size_t i = 0; i < nonces1.size(); i ++)
+        nonces1[i] = random_range(0, kB-kA);
+    nonces2.resize(this->m_k);
+    for(size_t i = 0; i < nonces2.size(); i ++)
+        nonces2[i] = random_range(0, kB-kA);
 }

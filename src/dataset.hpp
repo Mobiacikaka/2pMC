@@ -40,13 +40,11 @@ protected:
     bool IsSorted() const;
 
     // Pack the PutSIMDINGate in the DataSet class
-    // share* PutSIMDINGate(ArithmeticCircuit* circ, uint32_t nvals, size_t index, uint32_t bitlen, e_role role);
     data_t operator[](size_t index);
 
     //! Following function only for test
     void PrintAllElement();
 
-public:
     DataSet();
     ~DataSet();
 

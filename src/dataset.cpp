@@ -18,20 +18,15 @@ DataSet::~DataSet()
 
 void DataSet::PrintAllElement()
 {
-    for(auto it = this->data_set.begin(); it < this->data_set.end(); it ++)
-    {
-        std::cout << *it << " ";
-    }
-    std::cout << std::endl;
+    PrintElements(this->data_set);
 }
 
 void DataSet::GenerateRandomDataSet(size_t n)
 {
+    assert(kA < kB);
     this->data_set.resize(n);
-    std::srand(time(NULL));
     for(size_t i = 0; i < n; i ++)
-        this->data_set[i] = random_range(kA, kB);
-        // this->data_set[i] = rand();
+        data_set[i] = random_range(kA, kB);
 }
 
 void DataSet::Pad(size_t k, data_t p)

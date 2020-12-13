@@ -23,8 +23,20 @@ void Party::Run() {
     this->Prune();
     std::cout << "Pruning Finished Successfully!" << std::endl;
 
+	this->data_set.PrintAllElement();
+
     this->MergeAndShare();
     std::cout << "Merge and Share Finished Successfully!" << std::endl;
+
+	this->SelectionProbability();
+	std::cout << "Selection Probability Finished Successfully!" << std::endl;
+
+	std::cout << std::endl << "Share Dataset" << std::endl;
+	PrintElements(this->shr_dataset);
+	std::cout << std::endl << "Share Gap" << std::endl;
+	PrintElements(this->shr_gap);
+	std::cout << std::endl << "Share Mass" << std::endl;
+	PrintElements(this->shr_mass);
 }
 
 std::vector<uint32_t> Party::PutVectorCondSwapGate(uint32_t a, uint32_t b, uint32_t s, BooleanCircuit* circ) {

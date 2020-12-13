@@ -65,5 +65,8 @@ int main(int argc, char** argv) {
 	if (role == SERVER) party = new Server();
 	else party = new Client();
 
+	party->SetParameters(role, address, port, seclevel, bitlen, nthreads, mt_alg);
+	party->Run();
+
 	return 0;
 }
