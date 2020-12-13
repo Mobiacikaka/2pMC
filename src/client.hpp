@@ -4,16 +4,6 @@
 #include "party.hpp"
 class Client : public Party {
 private:
-    const e_role role;
-	const std::string address;
-	uint16_t port;
-	seclvl seclevel;
-	uint32_t bitlen;
-	uint32_t nthreads;
-	e_mt_gen_alg mt_alg;
-
-    // Arithmetic Share
-    data_t* shr_dataset;
 
 protected:
     // auxiliary functions

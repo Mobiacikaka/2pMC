@@ -2,11 +2,21 @@
 
 Party::Party() {
     data_set.Init();
-    data_set.PrintAllElement();
 }
 
 Party::~Party() {
 
+}
+
+void Party::SetParameters(e_role role, std::string address, uint16_t port, seclvl seclevel, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg)
+{
+	this->role = role;
+	this->address = address;
+	this->port = port;
+	this->seclevel = seclevel;
+	this->bitlen = bitlen;
+	this->nthreads = nthreads;
+	this->mt_alg = mt_alg;
 }
 
 void Party::Run() {
@@ -97,16 +107,16 @@ std::vector<uint32_t> Party::PutVectorBitonicSortGate(share** srv_set, share** c
 	return c;
 }
 
-std::vector<uint32_t> Party::BuildMergeAndSortCircuit(share** srv_set, share** cli_set, share** shr_rnd_srv_set, uint32_t neles, uint32_t bitlen, BooleanCircuit* circ)
+std::vector<share*>
+Party::BuildMergeAndSortCircuit(share** srv_set, share** cli_set, share** shr_rnd_srv_set, uint32_t neles, uint32_t bitlen, BooleanCircuit* circ)
 {
     std::vector<uint32_t> merge_out = PutVectorBitonicSortGate(srv_set, cli_set, neles, bitlen, circ);
 
-    size_t shrsize(2 * neles);
-    std::vector<uint32_t> sub_wire(shrsize);
+    std::vector<share*> sub_wire(2 * neles);
     for(size_t i = 0; i < 2 * neles; i ++) {
         boolshare tmp_share(1, circ);
         tmp_share.set_wire_id(0, merge_out[i]);
-        sub_wire[i] = circ->PutSUBGate(shr_rnd_srv_set[i], &tmp_share)->get_wire_id(0);
+        sub_wire[i] = circ->PutSUBGate(&tmp_share, shr_rnd_srv_set[i]);
     }
 
     return sub_wire;

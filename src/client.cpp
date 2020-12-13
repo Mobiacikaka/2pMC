@@ -14,13 +14,11 @@
 #include "client.hpp"
 
 Client::Client() 
-    : role(SERVER)
 {
 
 }
 
 Client::~Client() {
-
 }
 
 size_t Client::generate_k() {
@@ -97,38 +95,35 @@ void Client::MergeAndShare() {
 
     size_t neles = data_set.GetSizeofDataSet();
     size_t shrsize = 2 * neles;
-    data_t* rnd_cli_set = (data_t*) malloc(sizeof(data_t) * shrsize);
     share** shr_srv_set = (share**) malloc(sizeof(share*) * neles);
     share** shr_cli_set = (share**) malloc(sizeof(share*) * neles);
     share** shr_rnd_srv_set = (share**) malloc(sizeof(share*) * shrsize);
-    share** shr_out = (share**) malloc(sizeof(data_t) * shrsize);
+    share** shr_out = (share**) malloc(sizeof(share*) * shrsize);
 
     for (size_t i = 0; i < neles; i ++) {
         shr_srv_set[i] = bcirc->PutDummySIMDINGate(bitlen, 1);
-        shr_cli_set[i] = bcirc->PutSIMDINGate(bitlen, data_set[i], 1, role);
+        shr_cli_set[i] = bcirc->PutSIMDINGate(bitlen, data_set[neles-1-i], 1, role);
     }
 
     for (size_t i = 0; i < shrsize; i ++) {
         shr_rnd_srv_set[i] = bcirc->PutDummySIMDINGate(bitlen, 1);
     }
 
-	std::vector<uint32_t> out = BuildMergeAndSortCircuit(shr_srv_set, shr_cli_set, shr_rnd_srv_set, neles, bitlen, bcirc);
+	std::vector<share*> out = BuildMergeAndSortCircuit(shr_srv_set, shr_cli_set, shr_rnd_srv_set, neles, bitlen, bcirc);
 
     for (size_t i = 0; i < shrsize; i ++) {
-        shr_out[i] = new boolshare(1, bcirc);
-        shr_out[i]->set_wire_id(0, out[i]);
-        shr_out[i] = bcirc->PutOUTGate(shr_out[i], CLIENT);
+        shr_out[i] = bcirc->PutOUTGate(out[i], CLIENT);
     }
 
     party->ExecCircuit();
 
-    for(size_t i = 0; i < out.size(); i ++) {
-        rnd_cli_set[i] = shr_out[i]->get_clear_value<data_t>();
+    shr_dataset.resize(shrsize);
+    for(size_t i = 0; i < shrsize; i ++) {
+        shr_dataset[i] = shr_out[i]->get_clear_value<data_t>();
     }
 
     // delete operation
     delete party;
-    shr_dataset = rnd_cli_set;
     free(shr_srv_set);
     free(shr_cli_set);
     free(shr_rnd_srv_set);
