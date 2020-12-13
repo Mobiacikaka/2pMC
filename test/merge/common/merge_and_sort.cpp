@@ -92,74 +92,16 @@ std::vector<uint32_t> PutVectorBitonicSortGate(share** srv_set, share** cli_set,
 	return c;
 }
 
-/*
-std::vector<uint32_t> BuildMergeAndSortCircuit(share** srv_set, share** cli_set, share** r_srv_set,
-		uint32_t neles, uint32_t bitlen, ArithmeticCircuit* acirc, BooleanCircuit* bcirc) {
-
-	std::vector<uint32_t> a = PutVectorBitonicSortGate(srv_set, cli_set, neles, bitlen, bcirc);
-
-	// std::vector<uint32_t> b(2 * neles);
-	share** b = (share**) malloc(sizeof(share*) * 2 * neles);
-
-	for(size_t i = 0; i < 2*neles; i ++) {
-		b[i] = new 
-	}
-
-	for(size_t i = 0; i < 2*neles; i ++) {
-		bcirc->PutSUBGate()
-	}
-
-	// for(size_t i = 0; i < a.size(); i ++)
-	// 	std::cout << a[i] << " ";
-	// std::cout << std::endl;
-	// for(size_t i = 0; i < b.size(); i ++)
-	// 	std::cout << b[i] << " ";
-	// std::cout << std::endl;
-
-	// std::vector<uint32_t> c = bcirc->PutSUBGate(a, b, 2*neles);
-	// std::vector<uint32_t> c(2*neles);
-	// for(size_t i = 0; i < 2 * neles; i ++) {
-	// 	c[i] = acirc->PutSUBGate(a[i], b[i]);
-	// }
-	// std::cout << "c size: " << c.size() << std::endl;
-	assert(c.size() == 2*neles);
-
-	// for(size_t i = 0; i < c.size(); i ++) 
-	// 	std::cout << c[i] << " ";
-	// std::cout << std::endl;
-
-	// std::cout << "b size: " << b.size() << std::endl;
-
-	return a;
-}
-*/
-
-std::vector<uint32_t> BuildMergeAndSortCircuit2(share** srv_set, share** cli_set, share** r_srv_set,
+std::vector<share*> BuildMergeAndSortCircuit(share** srv_set, share** cli_set, share** r_srv_set,
 		uint32_t neles, uint32_t bitlen, BooleanCircuit* bcirc) {
 
 	std::vector<uint32_t> a = PutVectorBitonicSortGate(srv_set, cli_set, neles, bitlen, bcirc);
 
-	// bcirc->PutSUBGate()
-
-	return std::vector<uint32_t>(1);
-	
-}
-
-std::vector<uint32_t> BuildMergeAndSortCircuit(share** srv_set, share** cli_set, share** r_srv_set,
-		uint32_t neles, uint32_t bitlen, BooleanCircuit* bcirc) {
-
-	std::vector<uint32_t> a = PutVectorBitonicSortGate(srv_set, cli_set, neles, bitlen, bcirc);
-
-	std::vector<uint32_t> c(2*neles);
-
-	std::vector<uint32_t> b = r_srv_set[0]->get_wires();
-	for(size_t i = 0; i < b.size(); i ++) std::cout << b[i] << " ";
-	std::cout << std::endl;
-
+	std::vector<share*> c(2*neles);
 	for(size_t i = 0; i < 2*neles; i ++) {
 		boolshare tmp_share(1, bcirc);
 		tmp_share.set_wire_id(0, a[i]);
-		c[i] = bcirc->PutSUBGate(r_srv_set[i], &tmp_share)->get_wire_id(0);
+		c[i] = bcirc->PutSUBGate(&tmp_share, r_srv_set[i]);
 	}
 
 	return c;
@@ -173,6 +115,7 @@ int32_t test_merge_and_sort(e_role role, const std::string& address, uint16_t po
 	share **shr_srv_set, **shr_cli_set, **r_shr_srv_set, **shr_out;
 	e_sharing sharing_merge(S_ARITH);
 	uint64_t mask = 0b11111;
+	std::string str_role = role == SERVER ? "SERVER" : "CLIENT";
 
 	assert(sharing_merge == S_ARITH);
 
@@ -188,7 +131,6 @@ int32_t test_merge_and_sort(e_role role, const std::string& address, uint16_t po
 	shr_cli_set = (share**) malloc(sizeof(share*) * neles);
 	r_shr_srv_set = (share**) malloc(sizeof(share*) * 2 * neles);
 
-	srand(time(0));
 	for (size_t i = 0; i < neles; i ++) {
 		m_set[i] = rand() & mask;
 	}
@@ -225,13 +167,11 @@ int32_t test_merge_and_sort(e_role role, const std::string& address, uint16_t po
 	}
 
 	// ! Build Circuit
-	std::vector<uint32_t> out = BuildMergeAndSortCircuit(shr_srv_set, shr_cli_set, r_shr_srv_set, neles, bitlen, bcirc);
+	std::vector<share*> out = BuildMergeAndSortCircuit(shr_srv_set, shr_cli_set, r_shr_srv_set, neles, bitlen, bcirc);
 
 	shr_out = (share**) malloc(sizeof(share*) * out.size());
 	for (size_t i = 0; i < out.size(); i ++) {
-		shr_out[i] = new boolshare(1, bcirc);
-		shr_out[i]->set_wire_id(0, out[i]);
-		shr_out[i] = bcirc->PutOUTGate(shr_out[i], CLIENT);
+		shr_out[i] = bcirc->PutOUTGate(out[i], CLIENT);
 	}
 
 	party->ExecCircuit();
@@ -244,9 +184,9 @@ int32_t test_merge_and_sort(e_role role, const std::string& address, uint16_t po
 		}
 	}
 
-#ifdef NDEBUG
+#ifndef NDEBUG
 	for(uint32_t i = 0; i < 2*neles; i ++) {
-		std::cout << r_m_set[i] << "\t";
+		std::cout << r_m_set[i] << " ";
 	}
 	std::cout << std::endl;
 #endif

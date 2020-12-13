@@ -21,8 +21,8 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 
 	parsing_ctx options[] =
 			{ { (void*) &int_role, T_NUM, "r", "Role: 0/1", true, false },
-			  {	(void*) neles, T_NUM, "n",	"Number of elements", true, false },
-			  {	(void*) bitlen, T_NUM, "b", "Bit-length", true, false },
+			  {	(void*) neles, T_NUM, "n",	"Number of elements", false, false },
+			  {	(void*) bitlen, T_NUM, "b", "Bit-length", false, false },
 			  { (void*) secparam, T_NUM, "s", "Symmetric Security Bits, default: 128", false, false },
 			  {	(void*) address, T_STR, "a", "IP-address, default: localhost", false, false },
 			  {	(void*) &int_port, T_NUM, "p", "Port, default: 7766", false, false },
