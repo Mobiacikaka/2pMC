@@ -9,12 +9,21 @@ private:
 protected:
     // auxiliary functions
     size_t generate_k();
+    double generate_R();
     uint32_t comp_median();
+    data_t xor_nonces(data_t nonces_srv);
 
     // main functions
+    // One
     void Prune();
+    // Two
     void MergeAndShare();
+    // Three
     void SelectionProbability();
+    // Four
+	void MedianSelection();
+    // Seven
+    uint32_t RandomDraw(uint32_t M, std::vector<data_t>& nonces);
 
 public:
     Server();

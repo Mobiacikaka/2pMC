@@ -39,6 +39,25 @@ size_t Server::generate_k() {
     return (srv_size + cli_size) / 2;
 }
 
+double Server::generate_R() {
+    std::unique_ptr<CSocket> tsocket;
+	double mass_srv(this->shr_mass[this->shr_mass.size()-1]);
+    double mass_cli(0);
+
+    tsocket = Listen(this->address, this->port);
+    if(!tsocket) {
+		std::cerr << "Listen failed!" << std::endl;
+		std::exit(1);
+    }
+
+    tsocket->Receive(static_cast<void*>(&mass_cli), sizeof(size_t));
+    tsocket->Send   (static_cast<void*>(&mass_srv), sizeof(size_t));
+    tsocket->Close();
+
+    // return (mass_srv + mass_cli) % (1 << 63);
+    return (mass_srv + mass_cli);
+}
+
 uint32_t Server::comp_median() {
     const data_t median = data_set.GetMedian();
 
@@ -58,6 +77,29 @@ uint32_t Server::comp_median() {
     party->ExecCircuit();
 
     uint32_t o(shr_out->get_clear_value<uint32_t>());
+
+    delete party;
+
+    return o;
+}
+
+data_t Server::xor_nonces(data_t nonces_srv) {
+    ABYParty* party = new ABYParty(role, address, port, seclevel, bitlen, nthreads, mt_alg, 4000000);
+    std::vector<Sharing*>& sharings = party->GetSharings();
+
+    BooleanCircuit* circ = (BooleanCircuit*) sharings[S_BOOL]->GetCircuitBuildRoutine();
+
+    share *shr_srv, *shr_cli, *shr_out;
+
+    shr_srv = circ->PutINGate(nonces_srv, bitlen, role);
+    shr_cli = circ->PutDummyINGate(bitlen);
+
+    shr_out = circ->PutXORGate(shr_srv, shr_cli);
+    shr_out = circ->PutOUTGate(shr_out, ALL);
+
+    party->ExecCircuit();
+
+    uint32_t o(shr_out->get_clear_value<data_t>());
 
     delete party;
 
@@ -163,4 +205,37 @@ void Server::SelectionProbability()
     nonces2.resize(this->m_k);
     for(size_t i = 0; i < nonces2.size(); i ++)
         nonces2[i] = random_range(0, kB-kA);
+}
+
+void Server::MedianSelection() {
+    double R = this->generate_R();
+}
+
+uint32_t Server::RandomDraw(uint32_t M, std::vector<data_t>& nonces)
+{
+    uint32_t c = 0;
+    uint32_t mask = 0;
+    for(size_t i = this->bitlen-1; i >= 0; i --) {
+        c = (M >> i);
+        if(c != 0) {
+            mask = (1 << (i+1)) - 1;
+            break;
+        }
+    }
+
+    bool flag(false); // "s" in paper
+    uint32_t r;
+    for(size_t i = 1; i < m_k; i ++) {
+        r = xor_nonces(nonces[i]);
+
+        r = r & mask;
+        if(r < M) flag = true;
+    }
+
+    if(flag == false) {
+        std::cerr << "RANDOMDRAW ABORT!" << std::endl;
+        exit(-1);
+    }
+
+    return r;
 }

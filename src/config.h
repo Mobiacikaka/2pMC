@@ -28,7 +28,7 @@ const size_t kRANDOM_LIST_MIN_LENGTH = 80;
 
 typedef uint32_t data_t;
 
-const uint64_t mask = 0b111111;
+const uint64_t mask = 0xFFF;
 const data_t kA = 0;
 const data_t kB = mask;
 
