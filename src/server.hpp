@@ -9,7 +9,7 @@ private:
 protected:
     // auxiliary functions
     size_t generate_k();
-    double generate_R();
+    uint64_t generate_R();
     uint32_t comp_median();
     data_t xor_nonces(data_t nonces_srv);
 
@@ -23,7 +23,7 @@ protected:
     // Four
 	void MedianSelection();
     // Seven
-    uint32_t RandomDraw(uint32_t M, std::vector<data_t>& nonces);
+    uint64_t RandomDraw(uint64_t M, std::vector<data_t>& nonces);
 
 public:
     Server();
