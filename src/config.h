@@ -3,7 +3,7 @@
  * \author
  * \copyright
  * \brief
- */ 
+ */
 
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
@@ -12,7 +12,7 @@
 #include <limits>
 #include <cstdint>
 
-#define concat(a, b) a ## b
+#define concat(a, b) a##b
 
 // Pruning Steps Parameter
 const size_t kS = 4;
@@ -35,12 +35,21 @@ const data_t kB = mask;
 #define DEBUG_INFO \
     std::cout << "DEBUG INFO " << __LINE__ << std::endl;
 
-template<typename T>
-static inline void PrintElements(std::vector<T>& v)
+template <typename T>
+static inline void PrintElements(std::vector<T> &v)
 {
-    for(auto it = v.begin(); it < v.end(); it ++)
+    for (auto it = v.begin(); it < v.end(); it++)
         std::cout << *it << " ";
     std::cout << std::endl;
 }
+
+#define free_share_list(sharelist, length)    \
+    {                                         \
+        for (size_t i = 0; i < (length); i++) \
+        {                                     \
+            delete (sharelist)[i];            \
+        }                                     \
+        free((sharelist));                    \
+    }
 
 #endif

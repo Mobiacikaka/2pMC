@@ -64,6 +64,47 @@ uint32_t Client::comp_median() {
     return o;
 }
 
+uint64_t Client::generate_R() {
+    std::unique_ptr<CSocket> tsocket;
+    double mass_srv(0);
+	double mass_cli(this->shr_mass[this->shr_mass.size()-1]);
+
+    tsocket = Connect(this->address, this->port);
+    if(!tsocket) {
+		std::cerr << "Listen failed!" << std::endl;
+		std::exit(1);
+    }
+
+    tsocket->Send   (static_cast<void*>(&mass_cli), sizeof(double));
+    tsocket->Receive(static_cast<void*>(&mass_srv), sizeof(double));
+    tsocket->Close();
+
+    return static_cast<uint64_t>(mass_srv+mass_cli);
+}
+
+data_t Client::xor_nonces(data_t nonces_cli) {
+    ABYParty* party = new ABYParty(role, address, port, seclevel, bitlen, nthreads, mt_alg, 4000000);
+    std::vector<Sharing*>& sharings = party->GetSharings();
+
+    BooleanCircuit* circ = (BooleanCircuit*) sharings[S_BOOL]->GetCircuitBuildRoutine();
+
+    share *shr_srv, *shr_cli, *shr_xor, *shr_out;
+
+    shr_srv = circ->PutDummyINGate(bitlen);
+    shr_cli = circ->PutINGate(nonces_cli, bitlen, role);
+
+    shr_xor = circ->PutXORGate(shr_srv, shr_cli);
+    shr_out = circ->PutOUTGate(shr_xor, ALL);
+
+    party->ExecCircuit();
+
+    uint32_t o(shr_out->get_clear_value<data_t>());
+
+    delete party, shr_srv, shr_cli, shr_xor, shr_out;
+
+    return o;
+}
+
 void Client::Prune() {
     const data_t padding = kB;
     const size_t s = this->generate_s();
@@ -167,3 +208,119 @@ void Client::SelectionProbability()
     for(size_t i = 0; i < nonces2.size(); i ++)
         nonces2[i] = random_range(0, kB-kA);
 }
+
+// void Client::MedianSelection() {
+//     uint64_t R = this->generate_R();
+//     uint64_t r = this->RandomDraw(R+1, this->nonces1);
+
+//     size_t length = this->shr_dataset.size();
+//     size_t bitlen(64);
+
+//     ABYParty* party = new ABYParty(role, address, port, seclevel, bitlen, nthreads, mt_alg, 4000000);
+// 	std::vector<Sharing*>& sharings = party->GetSharings();
+// 	BooleanCircuit* bcirc = (BooleanCircuit*) sharings[S_BOOL]->GetCircuitBuildRoutine();
+
+//     share *tmp_srv, *tmp_cli;
+
+// /**
+//  * @param shr_cmb_dataset share combine dataset
+//  * @param shr_cmb_gap share combine gap 
+//  * @param shr_cmb_mass share combine mass
+//  * @param shr_no share vector of {0, 1, 2, 3, 4, 5, 6...}
+//  * @brief correspond to operation 5-7
+// */
+//     share** shr_cmb_dataset = (share**)malloc(sizeof(share*) * length);
+//     for(size_t i = 0; i < length; i ++) {
+//         tmp_srv = bcirc->PutDummyINGate(bitlen);
+//         tmp_cli = bcirc->PutINGate(this->shr_dataset[i], bitlen, role);
+//         shr_cmb_dataset[i] = bcirc->PutADDGate(tmp_srv, tmp_cli);
+//         delete tmp_srv, tmp_cli;
+//     }
+
+//     share** shr_cmb_gap = (share**)malloc(sizeof(share*) * length);
+//     for(size_t i = 0; i < length; i ++) {
+//         tmp_srv = bcirc->PutDummyINGate(bitlen);
+//         tmp_cli = bcirc->PutINGate((uint64_t)this->shr_gap[i], bitlen, role);
+//         shr_cmb_gap[i] = bcirc->PutADDGate(tmp_srv, tmp_cli);
+//         delete tmp_srv, tmp_cli;
+//     }
+
+//     share** shr_cmb_mass = (share**)malloc(sizeof(share*) * length);
+//     for(size_t i = 0; i < length; i++) {
+//         tmp_srv = bcirc->PutDummyINGate(bitlen);
+//         tmp_cli = bcirc->PutINGate((uint64_t)this->shr_mass[i], bitlen, role);
+//         shr_cmb_mass[i] = bcirc->PutADDGate(tmp_srv, tmp_cli);
+//         delete tmp_srv, tmp_cli;
+//     }
+
+//     share** shr_no = (share**) malloc(sizeof(share*) * length);
+//     for(size_t i = 0; i < length; i ++) {
+//         shr_no[i] = bcirc->PutINGate(i, bitlen, ALL);
+//     }
+
+//     share *shr_r = bcirc->PutCONSGate(r, bitlen);
+//     share *shr_zero = bcirc->PutCONSGate((uint64_t)0, bitlen);
+//     share *shr_one = bcirc->PutCONSGate((uint64_t)((1 << bitlen) - 1), bitlen);
+
+// /**
+//  * @param shr_cond1 represents condition value (r < mass[i])
+//  * @brief 
+// */
+//     share** shr_cond1 = (share**)malloc(sizeof(share*) * length); // r < mass[i]
+//     for(size_t i = 0; i < length; i ++) {
+//         shr_cond1[i] = bcirc->PutGTGate(shr_r, shr_cmb_mass[i]);
+//     }
+
+// /**
+//  * @param shr_sel select bits - select which  
+// */
+//     share *shr_new, *shr_prev, *shr_inv;
+//     shr_prev = bcirc->PutINGate((uint64_t)0, (uint32_t)1, ALL);
+//     share** shr_sel = (share**) malloc(sizeof(share*) * length);
+//     for(size_t i = 0; i < length; i ++) {
+//         shr_inv = bcirc->PutINVGate(shr_prev);
+//         shr_sel[i] = bcirc->PutANDGate(shr_inv, shr_cond1[i]);
+//         shr_new = bcirc->PutORGate(shr_prev, shr_sel[i]);
+//         shr_prev = shr_new;
+//     }
+
+//     share** shr_mask = (share**) malloc(sizeof(share*) * length);
+//     share** shr_cmb_dataset_masked = (share**) malloc(sizeof(share*) * length);
+//     share** shr_cmb_gap_masked = (share**) malloc(sizeof(share*) * length);
+//     share** shr_no_masked = (share**) malloc(sizeof(share*) * length);
+//     for(size_t i = 0; i < length; i ++) {
+//         shr_mask[i] = bcirc->PutMUXGate(shr_one, shr_zero, shr_sel[i]);
+//         shr_cmb_dataset_masked[i] = bcirc->PutANDGate(shr_mask[i], shr_cmb_dataset[i]);
+//         shr_cmb_gap_masked[i] = bcirc->PutANDGate(shr_mask[i], shr_cmb_gap[i]);
+//         shr_no_masked[i] = bcirc->PutANDGate(shr_mask[i], shr_no[i]);
+//     }
+
+//     share *shr_d = shr_cmb_dataset_masked[0];
+//     share *shr_g = shr_cmb_gap_masked[0];
+//     share *shr_j = shr_no_masked[0];
+//     for(size_t i = 1; i < length; i ++) {
+//         shr_d = bcirc->PutADDGate(shr_d, shr_cmb_dataset_masked[i]);
+//         shr_g = bcirc->PutADDGate(shr_g, shr_cmb_gap_masked[i]);
+//         shr_j = bcirc->PutADDGate(shr_j, shr_no_masked[i]);
+//     }
+    
+//     shr_d = bcirc->PutOUTGate(shr_d, ALL);
+//     shr_g = bcirc->PutOUTGate(shr_g, ALL);
+//     shr_j = bcirc->PutOUTGate(shr_j, ALL);
+
+//     party->ExecCircuit();
+
+//     uint64_t d = shr_d->get_clear_value<uint64_t>();
+//     uint64_t g = shr_g->get_clear_value<uint64_t>();
+//     uint64_t j = shr_j->get_clear_value<uint64_t>();
+
+//     uint64_t x = this->RandomDraw(g, nonces2);
+//     if(j < length/2 - 1) {
+//         return /*d + x*/;
+//     }
+//     else {
+//         return /*d - x*/;
+//     }
+
+//     std::cerr << "party execute error" << std::endl;
+// }

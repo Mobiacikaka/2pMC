@@ -23,7 +23,7 @@ protected:
     // Four
 	void MedianSelection();
     // Seven
-    uint64_t RandomDraw(uint64_t M, std::vector<data_t>& nonces);
+    // uint64_t RandomDraw(uint64_t M, std::vector<data_t>& nonces);
 
 public:
     Server();
