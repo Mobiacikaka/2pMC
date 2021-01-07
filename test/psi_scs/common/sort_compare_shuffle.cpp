@@ -58,7 +58,7 @@ int32_t test_psi_scs_circuit(e_role role, const std::string& address, uint16_t p
 		uint32_t neles, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg,
 		uint32_t prot_version, bool verify) {
 
-	uint32_t *srv_set, *cli_set, *circ_intersect, *ver_intersect;
+	uint32_t srv_set[] = {1,2,3,4}, cli_set[] = {4,3,2,1}, *circ_intersect, *ver_intersect;
 	uint32_t ver_inter_ctr = 0, circ_inter_ctr = 0;
 	uint32_t nswapgates = estimateGates(neles);
 	share **shr_server_set, **shr_client_set, **shr_out;
@@ -93,8 +93,8 @@ int32_t test_psi_scs_circuit(e_role role, const std::string& address, uint16_t p
 
 	assert(sortcirc->GetCircuitType() == C_BOOLEAN && permcirc->GetCircuitType() == C_BOOLEAN);
 
-	srv_set = (uint32_t*) malloc(sizeof(uint32_t) * neles);
-	cli_set = (uint32_t*) malloc(sizeof(uint32_t) * neles);
+	// srv_set = (uint32_t*) malloc(sizeof(uint32_t) * neles);
+	// cli_set = (uint32_t*) malloc(sizeof(uint32_t) * neles);
 	ver_intersect = (uint32_t*) malloc(sizeof(uint32_t) * neles);
 	circ_intersect = (uint32_t*) malloc(sizeof(uint32_t) * neles);
 
@@ -102,7 +102,7 @@ int32_t test_psi_scs_circuit(e_role role, const std::string& address, uint16_t p
 	shr_client_set = (share**) malloc(sizeof(share*) * neles);
 	shr_out = (share**) malloc(sizeof(share*) * neles);
 
-	GenerateRandomSet(srv_set, cli_set, neles, ver_intersect, mask, ver_inter_ctr);
+	// GenerateRandomSet(srv_set, cli_set, neles, ver_intersect, mask, ver_inter_ctr);
 
 	std::sort(srv_set, srv_set + neles);
 	std::sort(cli_set, cli_set + neles);
@@ -190,8 +190,8 @@ int32_t test_psi_scs_circuit(e_role role, const std::string& address, uint16_t p
 
 	delete party;
 
-	free(srv_set);
-	free(cli_set);
+	// free(srv_set);
+	// free(cli_set);
 	free(shr_server_set);
 	free(shr_client_set);
 	for(size_t i = 0; i < out.size(); i ++) delete shr_out[i];
@@ -338,6 +338,7 @@ vector<uint32_t> PutVectorBitonicSortGate(share** srv_set, share** cli_set, uint
 	//Build bitonic sort gate for all values in C
 	for (i = 1 << floor_log2(seqsize - 1); i > 0; i >>= 1) {
 		ctr = 0;
+		// compa[j]和compb[j]表示当前第i轮排序中，数组中的compa[j]和compb[j]元素比较
 		for (j = seqsize - 1, ctr = 0; j >= 0; j -= 2 * i) {
 			for (k = 0; k < i && j - i - k >= 0; k++) {
 				compa[ctr] = j - i - k;
@@ -347,7 +348,7 @@ vector<uint32_t> PutVectorBitonicSortGate(share** srv_set, share** cli_set, uint
 		}
 
 		//TODO: Introduce specific gate that allows the permutation of vector gates from different input gates + bit positions
-
+		// assert(ctr == seqsize/2)
 		for (uint32_t l = 0; l < bitlen; l++) {
 			//cout << "l = " << l << endl;
 			for (k = 0; k < ctr; k++) {
@@ -359,6 +360,11 @@ vector<uint32_t> PutVectorBitonicSortGate(share** srv_set, share** cli_set, uint
 			tempcmpveca[l] = circ->PutCombineAtPosGate(parenta, l);
 			tempcmpvecb[l] = circ->PutCombineAtPosGate(parentb, l);
 		}
+
+		for(size_t i = 0; i < tempcmpveca.size(); i ++) std::cout << tempcmpveca[i] << " ";
+		std::cout << std::endl;
+		for(size_t i = 0; i < tempcmpvecb.size(); i ++) std::cout << tempcmpvecb[i] << " ";
+		std::cout << std::endl;
 
 		selbitsvec = circ->PutGTGate(tempcmpveca, tempcmpvecb);
 

@@ -45,28 +45,44 @@ int32_t test_millionaire_prob_circuit(
 	// Circuit* arithcirc = sharings[sharing]->GetCircuitBuildRoutine();
 	BooleanCircuit* bcirc = static_cast<BooleanCircuit*>(sharings[S_BOOL]->GetCircuitBuildRoutine());
 
-	share* shr_a, *shr_b, *shr_c;
-	uint32_t a = 1000, b = 100, c=999;
+	// share* shr_a, *shr_b, *shr_c;
+	// // uint32_t a = 1000, b = 100, c=999;
+	// uint32_t a = 0b11, b = 0b1;
+	// if(role == SERVER) {
+	// 	// shr_a = bcirc->PutSIMDINGate(bitlen, a, 1, SERVER);
+	// 	// shr_b = bcirc->PutSIMDINGate(bitlen, b, 1, SERVER);
+	// 	// shr_b = bcirc->PutDummySIMDINGate(bitlen, 1);
+	// 	shr_a = bcirc->PutINGate(a, bitlen, SERVER);
+	// 	shr_b = bcirc->PutDummyINGate(bitlen);
+	// }
+	// else {
+	// 	shr_a = bcirc->PutDummyINGate(bitlen);
+	// 	shr_b = bcirc->PutINGate(b, bitlen, CLIENT);
+	// 	// shr_a = bcirc->PutDummySIMDINGate(bitlen, 1);
+	// 	// shr_b = bcirc->PutDummySIMDINGate(bitlen, 1);
+	// 	// shr_b = bcirc->PutSIMDINGate(bitlen, b, 1, CLIENT);
+	// }
+
+	// share* shr_out;
+	// shr_out = bcirc->PutADDGate(shr_a, shr_b);
+	// shr_out = bcirc->PutINVGate(shr_out);
+	// shr_out = bcirc->PutOUTGate(shr_out, CLIENT);
+
+	// share* shr_one = bcirc->PutINGate((uint32_t)1, bitlen, ALL);
+	share* shr_one;
 	if(role == SERVER) {
-		shr_a = bcirc->PutSIMDINGate(bitlen, a, 1, SERVER);
-		shr_b = bcirc->PutSIMDINGate(bitlen, b, 1, SERVER);
-		shr_c = bcirc->PutDummySIMDINGate(bitlen, 1);
+		shr_one = bcirc->PutINGate(uint32_t(1), 1, SERVER);
 	}
 	else {
-		shr_a = bcirc->PutDummySIMDINGate(bitlen, 1);
-		shr_b = bcirc->PutDummySIMDINGate(bitlen, 1);
-		shr_c = bcirc->PutSIMDINGate(bitlen, c, 1, CLIENT);
+		shr_one = bcirc->PutDummyINGate(1);
 	}
-
-	share* shr_out;
-	shr_out = bcirc->PutADDGate(shr_a, shr_b);
-	shr_out = bcirc->PutSUBGate(shr_c, shr_out);
+	share* shr_out = bcirc->PutINVGate(shr_one);
 	shr_out = bcirc->PutOUTGate(shr_out, CLIENT);
 
 	party->ExecCircuit();
 	std::cout << "success" << std::endl;
 
-	std::cout << shr_a->get_wires().size() << std::endl;
+	// std::cout << shr_a->get_wires().size() << std::endl;
 
 	if(role == CLIENT) {
 		uint32_t output = shr_out->get_clear_value<uint32_t>();
