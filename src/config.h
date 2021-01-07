@@ -15,9 +15,9 @@
 #define concat(a, b) a##b
 
 // Pruning Steps Parameter
-const size_t kS = 4;
+const size_t kS = 3;
 // Probability Selection Parameter
-const double kEPSILON = 0.1;
+const double kEPSILON = 1;
 
 #define random_range(min, max) \
     (min) + (rand() % static_cast<uint32_t>((max) - (min) + 1))
@@ -28,7 +28,7 @@ const size_t kRANDOM_LIST_MIN_LENGTH = 80;
 
 typedef uint32_t data_t;
 
-const uint64_t mask = 0xFFF;
+const uint64_t mask = 0b1111111111;
 const data_t kA = 0;
 const data_t kB = mask;
 

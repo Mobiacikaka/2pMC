@@ -204,4 +204,8 @@ void Server::SelectionProbability()
     nonces2.resize(this->m_k);
     for(size_t i = 0; i < nonces2.size(); i ++)
         nonces2[i] = random_range(0, kB-kA);
+
+    shr_dataset = std::vector<uint32_t>(shr_dataset.begin()+1, shr_dataset.end()-1);
+    shr_gap     = std::vector<int32_t >(shr_gap.begin()+1,     shr_gap.end()-1);
+    shr_mass    = std::vector<double  >(shr_mass.begin()+1,    shr_mass.end()-1);
 }

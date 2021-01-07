@@ -176,7 +176,7 @@ void Party::MedianSelection() {
 		tmp_srv = PutINGate(bcirc, this->bitlen, SERVER, this->shr_dataset[i]);
 		tmp_cli = PutINGate(bcirc, this->bitlen, CLIENT, this->shr_dataset[i]);
         shr_cmb_dataset[i] = bcirc->PutADDGate(tmp_srv, tmp_cli);
-        bcirc->PutPrintValueGate(shr_cmb_dataset[i], "dataset");
+        // bcirc->PutPrintValueGate(shr_cmb_dataset[i], "dataset");
         delete tmp_srv, tmp_cli;
     }
 
@@ -187,7 +187,7 @@ void Party::MedianSelection() {
 		tmp_srv = PutINGate(bcirc, bitlen, SERVER, (inputtype)this->shr_gap[i]);
 		tmp_cli = PutINGate(bcirc, bitlen, CLIENT, (inputtype)this->shr_gap[i]);
         shr_cmb_gap[i] = bcirc->PutADDGate(tmp_srv, tmp_cli);
-        bcirc->PutPrintValueGate(shr_cmb_gap[i], "gap");
+        // bcirc->PutPrintValueGate(shr_cmb_gap[i], "gap");
         delete tmp_srv, tmp_cli;
     }
 
@@ -198,7 +198,7 @@ void Party::MedianSelection() {
 		tmp_srv = PutINGate(bcirc, bitlen, SERVER, (inputtype)this->shr_mass[i]);
 		tmp_cli = PutINGate(bcirc, bitlen, CLIENT, (inputtype)this->shr_mass[i]);
         shr_cmb_mass[i] = bcirc->PutADDGate(tmp_srv, tmp_cli);
-        bcirc->PutPrintValueGate(shr_cmb_mass[i], "mass");
+        // bcirc->PutPrintValueGate(shr_cmb_mass[i], "mass");
         delete tmp_srv, tmp_cli;
     }
 
@@ -208,7 +208,7 @@ void Party::MedianSelection() {
     share** shr_no = (share**) malloc(sizeof(share*) * length);
     for(size_t i = 0; i < length; i ++) {
         shr_no[i] = PutINGate(bcirc, sizeof(size_t), SERVER, (inputtype)i);
-        bcirc->PutPrintValueGate(shr_no[i], "number");
+        // bcirc->PutPrintValueGate(shr_no[i], "number");
     }
 
     share *shr_r = bcirc->PutCONSGate(r, bitlen);
@@ -219,8 +219,9 @@ void Party::MedianSelection() {
 */
     share** shr_cond1 = (share**)malloc(sizeof(share*) * length); // r < mass[i]
     for(size_t i = 0; i < length; i ++) {
-        shr_cond1[i] = bcirc->PutGTGate(shr_r, shr_cmb_mass[i]);
-        // bcirc->PutPrintValueGate(shr_cmb_mass[i], "mass");
+        // shr_cond1[i] = bcirc->PutGTGate(shr_r, shr_cmb_mass[i]);
+        shr_cond1[i] = bcirc->PutGTGate(shr_cmb_mass[i], shr_r);
+        bcirc->PutPrintValueGate(shr_cmb_mass[i], "mass");
         // bcirc->PutPrintValueGate(shr_cond1[i], "condition");
     }
 
@@ -248,13 +249,13 @@ void Party::MedianSelection() {
     share** shr_no_masked = (share**) malloc(sizeof(share*) * length);
     for(size_t i = 0; i < length; i ++) {
         shr_mask[i] = bcirc->PutMUXGate(shr_one, shr_zero, shr_sel[i]);
-        bcirc->PutPrintValueGate(shr_mask[i], "mask");
+        // bcirc->PutPrintValueGate(shr_mask[i], "mask");
         shr_cmb_dataset_masked[i] = bcirc->PutANDGate(shr_mask[i], shr_cmb_dataset[i]);
         shr_cmb_gap_masked[i] = bcirc->PutANDGate(shr_mask[i], shr_cmb_gap[i]);
         shr_no_masked[i] = bcirc->PutANDGate(shr_mask[i], shr_no[i]);
-        bcirc->PutPrintValueGate(shr_cmb_dataset_masked[i], "dataset masked");
-        bcirc->PutPrintValueGate(shr_cmb_gap_masked[i], "gap masked");
-        bcirc->PutPrintValueGate(shr_no_masked[i], "number masked");
+        // bcirc->PutPrintValueGate(shr_cmb_dataset_masked[i], "dataset masked");
+        // bcirc->PutPrintValueGate(shr_cmb_gap_masked[i], "gap masked");
+        // bcirc->PutPrintValueGate(shr_no_masked[i], "number masked");
     }
 
     share *shr_d = shr_cmb_dataset_masked[0];
@@ -280,9 +281,13 @@ void Party::MedianSelection() {
 
     uint64_t x = this->RandomDraw(g, nonces2);
     if(j < length/2 - 1) {
+        std::cout << "Computation Result:" << std::endl;
+        std::cout << d + x << std::endl;
         return /*d + x*/;
     }
     else {
+        std::cout << "Computation Result:" << std::endl;
+        std::cout << d - x << std::endl;
         return /*d - x*/;
     }
 
